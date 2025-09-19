@@ -1,0 +1,61 @@
+# Docker Service Hardening
+services:
+  traefik:
+    image: traefik:v3.0
+    container_name: traefik
+    ports:
+      - '80:80'
+      - '443:443'
+    volumes:
+      - /run/user/1000/docker.sock:/var/run/docker.sock:ro
+      - /opt/docker/letsencrypt:/letsencrypt
+    command:
+      - '--providers.docker=true'
+      - '--providers.docker.exposedbydefault=false'
+      - '--entrypoints.web.address=:80'
+      - '--entrypoints.websecure.address=:443'
+      - '--certificatesresolvers.le.acme.httpchallenge=true'
+      - '--certificatesresolvers.le.acme.httpchallenge.entrypoint=web'
+      - '--certificatesresolvers.le.acme.email=webmaster@codeagency.cl'
+      - '--certificatesresolvers.le.acme.storage=/letsencrypt/acme.json'
+    restart: unless-stopped
+    networks:
+      - proxy
+  mariadb:
+    image: 'mariadb:11'
+    container_name: mariadb
+    environment:
+      MYSQL_ROOT_PASSWORD: '${MARIADB_PASSWORD}'
+    volumes:
+      - 'mariadb:/var/lib/mysql'
+    networks:
+      - services
+    healthcheck:
+      test: [ 'CMD', 'healthcheck.sh', '--connect', '--innodb_initialized' ]
+      retries: 3
+      timeout: 5s
+  valkey:
+    image: 'valkey/valkey:alpine'
+    container_name: valkey
+    volumes:
+      - 'valkey:/data'
+    command:
+      - 'valkey-server'
+      - '--requirepass'
+      - '${VALKEY_PASSWORD}'
+    networks:
+      - services
+    healthcheck:
+      test: [ 'CMD', 'valkey-cli', '-a', '${VALKEY_PASSWORD}', 'ping' ]
+      retries: 3
+      timeout: 5s
+networks:
+  services:
+    driver: bridge
+  proxy:
+    driver: bridge
+volumes:
+  mariadb:
+    driver: local
+  valkey:
+    driver: local

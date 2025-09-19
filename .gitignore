@@ -1,0 +1,19 @@
+# Ignore environment files except the example
+.env
+.env.*
+!.env.example
+
+# Ignore logs and swap files
+*.log
+*.swp
+
+# Ignore local Docker Compose override
+docker-compose.override.yml
+
+# Ignore system files
+.DS_Store
+Thumbs.db
+
+# Ignore IDE/editor config
+.idea/
+.vscode/
