@@ -4,8 +4,8 @@ services:
     image: traefik:v3.0
     container_name: traefik
     ports:
-      - '80:80'
-      - '443:443'
+      - '8080:80'
+      - '8443:443'
     volumes:
       - /run/user/1000/docker.sock:/var/run/docker.sock:ro
       - /opt/docker/letsencrypt:/letsencrypt
